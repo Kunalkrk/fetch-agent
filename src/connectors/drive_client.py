@@ -34,7 +34,7 @@ class DriveClient:
     service: Any  # googleapiclient Resource
 
     async def search_files(self, query: str, max_results: int = 5) -> list[dict[str, Any]]:
-        """Search Drive using a raw Drive v3 query string, e.g. `title contains 'Q4'`."""
+        """Search Drive using a raw Drive v3 query string, e.g. `name contains 'Q4'`."""
         try:
             resp = (
                 self.service.files()

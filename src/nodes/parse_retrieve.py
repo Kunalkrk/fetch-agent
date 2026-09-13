@@ -48,7 +48,7 @@ Message: {raw_input}"""
 
 
 def _build_drive_query(keywords: list[str]) -> str:
-    clauses = [f"title contains '{kw}'" for kw in keywords if kw]
+    clauses = [f"name contains '{kw}'" for kw in keywords if kw]
     return " and ".join(clauses) if clauses else ""
 
 

@@ -19,7 +19,7 @@ from src.nodes.parse_retrieve import ParsedAsk, _build_drive_query, parse_retrie
 
 def test_build_drive_query_joins_keywords_with_and():
     query = _build_drive_query(["Q4", "Planning"])
-    assert query == "title contains 'Q4' and title contains 'Planning'"
+    assert query == "name contains 'Q4' and name contains 'Planning'"
 
 
 def test_build_drive_query_empty_keywords():
