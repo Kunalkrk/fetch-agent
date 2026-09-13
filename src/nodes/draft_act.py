@@ -67,7 +67,13 @@ async def draft_act(state: AgentState) -> AgentState:
             source_content=source_content or "(no source material found)",
         )
     )
-    draft_content = draft_response.content
+    content = draft_response.content
+    if isinstance(content, list):
+        draft_content = "".join(
+            block.get("text", "") if isinstance(block, dict) else str(block) for block in content
+        )
+    else:
+        draft_content = content
 
     # --- Create the follow-up artifact in Drive ---
     output_doc_id = None
