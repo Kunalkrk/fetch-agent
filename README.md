@@ -4,6 +4,8 @@
 
 Fetch is a multi-step AI agent that watches Slack for a triggering message (e.g. *"Sarah asked for the Q4 Planning Deck by Friday — get it done"*) and autonomously executes a cross-app workflow: it parses the ask, pulls context and source material from Google Drive and Gmail, drafts the deliverable, verifies its own work, and reports back to Slack — all without a human touching three different apps to get there.
 
+**[Watch the 2-minute demo](https://www.loom.com/share/f857c2cd6e17433aae4cda7332031a6a)** — a real Slack trigger, live agent run, drafted Google Doc, and an explanation of how Gmail is used for context.
+
 ## Architecture
 
 ```
@@ -92,7 +94,3 @@ That verdict is never silently dropped — `report` surfaces the status, confide
 - **Drive retrieval is keyword-based** (`name contains 'X' and name contains 'Y'` on the extracted search keywords) — it won't find a source file whose name doesn't share words with the ask.
 - **Every message in the watched Slack channel triggers a run** — there's no filter yet for "is this actually an ask" before running the full pipeline.
 - **Gmail is context-only** (see above) — no email trigger yet.
-
-## Demo
-
-_Link to demo video here._
