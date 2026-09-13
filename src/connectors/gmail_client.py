@@ -1,15 +1,19 @@
-"""Gmail connector.
+"""Gmail connector, backed by the Google API Python client.
 
-Thin wrapper used for context retrieval (finding the thread the ask came
-from, or related emails referenced by it). Swap internals for the real
-MCP client once the Gmail MCP server is authorized.
+Used for context retrieval (finding the thread the ask came from, or
+related emails referenced by it). Auth: see google_auth.py /
+scripts/google_oauth_setup.py.
 """
 
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass
 from typing import Any
+
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
+
+from src.connectors.google_auth import GoogleAuthError, get_google_credentials
 
 
 class GmailConnectionError(RuntimeError):
@@ -18,28 +22,48 @@ class GmailConnectionError(RuntimeError):
 
 @dataclass
 class GmailClient:
-    server_url: str
+    service: Any  # googleapiclient Resource
 
     async def search_messages(self, query: str, max_results: int = 5) -> list[dict[str, Any]]:
-        """Search for messages matching a query string (sender, subject, keywords)."""
-        raise NotImplementedError("Wire up to Gmail MCP server / API")
+        """Search for messages matching a Gmail search query (e.g. 'from:sarah subject:Q4')."""
+        try:
+            resp = (
+                self.service.users()
+                .messages()
+                .list(userId="me", q=query, maxResults=max_results)
+                .execute()
+            )
+            return resp.get("messages", [])
+        except HttpError as e:
+            raise GmailConnectionError(f"Failed to search messages: {e}") from e
 
     async def get_thread(self, thread_id: str) -> dict[str, Any]:
         """Fetch a full thread for context."""
-        raise NotImplementedError("Wire up to Gmail MCP server / API")
+        try:
+            return (
+                self.service.users()
+                .threads()
+                .get(userId="me", id=thread_id, format="full")
+                .execute()
+            )
+        except HttpError as e:
+            raise GmailConnectionError(f"Failed to fetch thread {thread_id}: {e}") from e
 
     async def ping(self) -> bool:
         """Lightweight auth check used by scripts/check_connections.py."""
-        raise NotImplementedError("Wire up to Gmail MCP server / API")
+        try:
+            self.service.users().getProfile(userId="me").execute()
+            return True
+        except HttpError as e:
+            raise GmailConnectionError(f"Auth check failed: {e}") from e
 
 
 async def get_gmail_client() -> GmailClient:
-    server_url = os.environ.get("GMAIL_MCP_SERVER_URL")
-    if not server_url:
-        raise GmailConnectionError(
-            "Missing GMAIL_MCP_SERVER_URL. Authorize the Gmail MCP connector "
-            "and set this in .env."
-        )
-    client = GmailClient(server_url=server_url)
+    try:
+        creds = get_google_credentials()
+    except GoogleAuthError as e:
+        raise GmailConnectionError(str(e)) from e
+    service = build("gmail", "v1", credentials=creds)
+    client = GmailClient(service=service)
     await client.ping()
     return client
