@@ -73,11 +73,22 @@ class DriveClient:
             raise DriveConnectionError(f"Failed to fetch content for {file_id}: {e}") from e
 
     async def create_file(
-        self, name: str, content: str, folder_id: Optional[str] = None
+        self,
+        name: str,
+        content: str,
+        folder_id: Optional[str] = None,
+        as_google_doc: bool = True,
     ) -> dict[str, Any]:
-        """Create the drafted deliverable as a new Drive file (plain text/Google Doc)."""
+        """Create the drafted deliverable as a new Drive file.
+
+        By default uploads plain text but asks Drive to convert it into a
+        native Google Doc (as_google_doc=True) so it opens in the Docs
+        editor, not a text-file viewer.
+        """
         try:
             file_metadata: dict[str, Any] = {"name": name}
+            if as_google_doc:
+                file_metadata["mimeType"] = "application/vnd.google-apps.document"
             if folder_id:
                 file_metadata["parents"] = [folder_id]
 
